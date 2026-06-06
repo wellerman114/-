@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>야구 선수 5-Tools 메타인지 진단 시스템</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;        
+            --card-bg: #1e293b;        
+            --primary-color: #38bdf8;   
+            --secondary-color: #0ea5e9; 
+            --text-main: #f8fafc;       
+            --text-muted: #94a3b8;      
+            --border-color: #334155;    
+            --neon-green: #10b981;
+            --neon-orange: #f59e0b;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .survey-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 760px;
+            padding: 24px;
+            box-sizing: border-box;
+            border: 1px solid #475569;
+        }
+
+        .progress-bar-container {
+            background-color: #334155;
+            border-radius: 10px;
+            height: 8px;
+            width: 100%;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .category-title {
+            color: var(--primary-color);
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .category-desc {
+            color: var(--text-muted);
+            font-size: 13.5px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .profile-group { margin-bottom: 18px; }
+        .profile-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+        .profile-group input[type="text"],
+        .profile-group input[type="number"],
+        .profile-group select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #0f172a;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+        
+        .profile-group input:focus,
+        .profile-group select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+            outline: none;
+        }
+
+        .profile-inline { display: flex; gap: 12px; }
+        .profile-inline .profile-group { flex: 1; }
+
+        .question-item {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .question-text {
+            font-size: 15.5px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.5;
+            color: #f1f5f9;
+        }
+
+        .options-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #cbd5e1;
+            cursor: pointer;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .option-label.selected {
+            background-color: rgba(14, 165, 233, 0.15);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .option-label input {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 30px; gap: 12px; }
+
+        button {
+            padding: 15px 24px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .btn-prev { background-color: #334155; color: #cbd5e1; }
+        .btn-next {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+        }
+
+        .hidden { display: none; }
+
+        .scale-guide-board {
+            background: #1e293b;
+            border: 1px dashed var(--primary-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .scale-guide-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .scale-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 12.5px;
+        }
+        .scale-item {
+            background: #0f172a;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+        .scale-num { font-weight: 800; color: var(--primary-color); }
+        .scale-lbl { color: var(--text-main); }
+
+        #chart-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 24px 0;
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        canvas { max-width: 100%; height: auto !important; }
+
+        .solution-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #0f172a;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+        }
+        .solution-block {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+        .solution-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .sol-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .badge-identity { background-color: rgba(56, 189, 248, 0.2); color: var(--primary-color); }
+        .badge-meta { background-color: rgba(245, 158, 11, 0.2); color: var(--neon-orange); }
+        .badge-tool { background-color: rgba(16, 185, 129, 0.2); color: var(--neon-green); }
+
+        .sol-title { font-size: 16.5px; font-weight: 700; margin-bottom: 8px; color: #f1f5f9; line-height: 1.4; }
+        .sol-text { font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+
+        #result-view table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+            background-color: #0f172a;
+            border-radius: 10px;
+            overflow: hidden;
+            font-size: 13.5px;
+        }
+        #result-view th, #result-view td { border: 1px solid var(--border-color); padding: 12px 8px; text-align: center; }
+        #result-view th { background-color: #1e293b; color: var(--primary-color); }
+        
+        .profile-summary {
+            background: #334155;
+            border-left: 4px solid var(--primary-color);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        @media (min-width: 600px) {
+            .options-group { flex-direction: row; }
+            .option-label { flex: 1; flex-direction: column; justify-content: center; text-align: center; padding: 12px 4px; font-size: 12px; }
+            .option-label input { margin-right: 0; margin-bottom: 6px; }
+            .category-title { font-size: 26px; }
+            .survey-container { padding: 35px; }
+            .scale-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 🎯 사진에서 제공해 주신 실제 구글 클라우드 보안 연동 키 주입 완료!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRWjWd8ckX7a_qSiVhOvTCr-TOO_cHhsw",
+            authDomain: "baseball-meta-data-base.firebaseapp.com",
+            projectId: "baseball-meta-data-base",
+            storageBucket: "baseball-meta-data-base.firebasestorage.app",
+            messagingSenderId: "377304698603",
+            appId: "1:377304698603:web:45ca5077de8442321c78ae"
+        };
+
+        // Firebase 연동 활성화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.dbStore = { collection, addDoc, db, serverTimestamp };
+    </script>
+</head>
+<body>
+
+<div class="survey-container">
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+
+    <div id="profile-stage">
+        <div class="category-title">선수 프로필 등록</div>
+        <div class="category-desc">자가 진단을 시작하기 전, 선수의 기본 정보를 입력해 주세요.</div>
+        
+        <div class="profile-group">
+            <label for="p-name">선수 성명</label>
+            <input type="text" id="p-name" placeholder="예: 홍길동">
+        </div>
+        <div class="profile-group">
+            <label for="p-age">나이 (만)</label>
+            <input type="number" id="p-age" placeholder="예: 18" min="1">
+        </div>
+        <div class="profile-inline">
+            <div class="profile-group">
+                <label for="p-height">신장 (cm)</label>
+                <input type="number" id="p-height" placeholder="예: 180" min="1" step="0.1">
+            </div>
+            <div class="profile-group">
+                <label for="p-weight">체중 (kg)</label>
+                <input type="number" id="p-weight" placeholder="예: 75" min="1" step="0.1">
+            </div>
+        </div>
+        <div class="profile-group">
+            <label for="p-league">현재 소속 리그</label>
+            <select id="p-league">
+                <option value="">-- 리그를 선택하세요 --</option>
+                <option value="고교야구">고교야구</option>
+                <option value="대학야구">대학야구</option>
+                <option value="독립리그">독립리그</option>
+                <option value="프로야구">프로야구</option>
+            </select>
+        </div>
+        <div class="nav-buttons" style="justify-content: flex-end;">
+            <button class="btn-next" onclick="startSurvey()">설문 시작하기</button>
+        </div>
+    </div>
+
+    <div id="survey-form" class="hidden">
+        <div id="category-header">
+            <div class="category-title" id="cat-title">요소 이름</div>
+            <div class="category-desc" id="cat-desc">요소 설명</div>
+        </div>
+        <div id="questions-container"></div>
+        <div class="nav-buttons">
+            <button class="btn-prev" id="btn-prev" onclick="moveStage(-1)">이전 단계</button>
+            <button class="btn-next" id="btn-next" onclick="moveStage(1)">다음 단계</button>
+        </div>
+    </div>
+
+    <div id="result-view" class="hidden">
+        <div class="category-title">자가 진단 결과 리포트</div>
+        <p style="color: var(--text-muted); font-size:13.5px; margin-top:4px;">종합 정체성 및 메타인지 데이터 분석 피드백 솔루션입니다.</p>
+        <div class="profile-summary" id="profile-summary-text"></div>
+
+        <div class="scale-guide-board">
+            <div class="scale-guide-title">⚾ 20-80 스케일(Scouting Scale) 평가 가이드</div>
+            <div class="scale-grid">
+                <div class="scale-item"><span class="scale-lbl">최하위권</span><span class="scale-num">20~30</span></div>
+                <div class="scale-item"><span class="scale-lbl">리그 평균 이하</span><span class="scale-num">40</span></div>
+                <div class="scale-item"><span class="scale-lbl">리그 평균치</span><span class="scale-num">50</span></div>
+                <div class="scale-item"><span class="scale-lbl">주전급 우수</span><span class="scale-num">55</span></div>
+                <div class="scale-item"><span class="scale-lbl">올스타급 엘리트</span><span class="scale-num">60</span></div>
+                <div class="scale-item"><span class="scale-lbl">리그 최상위</span><span class="scale-num">70</span></div>
+                <div class="scale-item"><span class="scale-lbl">초현실적 (괴물)</span><span class="scale-num">80</span></div>
+                <div class="scale-item" style="border-color: var(--primary-color);"><span class="scale-lbl">기준점</span><span class="scale-num">55↑ 강점</span></div>
+            </div>
+        </div>
+
+        <div id="chart-container">
+            <canvas id="radarChart" width="360" height="360"></canvas>
+        </div>
+
+        <div class="solution-section" id="solution-report"></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>평가 요소 (5-Tools)</th>
+                    <th>원점수 (50점 만점)</th>
+                    <th>20-80 스케일</th>
+                </tr>
+            </thead>
+            <tbody id="result-rows"></tbody>
+        </table>
+        <div style="margin-top: 30px; text-align: center;">
+            <button class="btn-next" onclick="window.location.reload()">다시 테스트하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const surveyData = [
+        {
+            category: "파워 (Power)",
+            desc: "장타 자신감에서 시작하여 실전 발현 빈도, 순수장타율 및 타구 속도를 예측하는 지표 빌드업입니다.",
+            questions: [
+                "나는 팀 내에서 타구의 힘 및 배트 스피드만큼은 누구에게도 뒤지지 않는다는 강한 자신감이 있다.",
+                "타석에 들어설 때 ‘언제든 담장 밖으로 공을 보낼 수 있는 힘이 내게 있다’고 직관적으로 느낀다.",
+                "중심에 완벽히 맞지 않은 빗맞은 타구라도 내 순수한 힘(Power)으로 내야를 아예 관통시킬 수 있다는 확신이 있다.",
+                "실제 시합에서 상대 투수의 강력한 구위(빠른 속구 등)에 밀리지 않고 정면 승부하여 이겨내는 경우가 많다.",
+                "유리한 카운트(노스트라이크, 투볼 등)가 되었을 때, 망설임 없이 장타나 홈런을 목적으로 한 풀스윙을 과감하게 돌린다.",
+                "정타가 되었을 때 타구가 외야수 키를 넘어가거나 펜스까지 다이렉트로 날아가는 궤적이 자주 나온다.",
+                "나의 '순수장타율(장타율-타율)'은 현재 내가 속한 리그의 평균적인 타자들보다 확실히 높은 수준에 속한다.",
+                "내가 생각하는 나의 평균 타구 속도(Exit Velocity)는 현재 우리 리그 평균치보다 확연히 높다.",
+                "시즌 전체 인플레이 타구 중 단타가 아닌 2루타 이상의 장타(Extra-base hit)를 생산해낼 수 있는 비율이 최소 30~40% 이상은 된다고 판단한다.",
+                "컨디션이 저하된 상태에서도 배트 토크(Torque)와 회전력을 유지하여 리그 상위권 수준의 배트 스피드를 상시 유지할 수 " + "있다."
+            ]
+        },
+        {
+            category: "컨택 (Contact)",
+            desc: "공 맞히기 확신에서 출발하여 투스트라이크 이후 대응력, 헛스윙률 및 삼진율을 예측합니다.",
+            questions: [
+                "나는 투수가 던진 공이 배트에 맞는 임팩트 순간까지 시선을 흔들리지 않고 고정할 수 있다는 자신감이 있다.",
+                "낯선 투수나 까다로운 유형의 투수를 만나도, 1~2타석 안에 그 투수의 궤적과 타이밍을 직관적으로 포착해 낼 수 있다.",
+                "투수가 어떤 구종을 던지든 '배트 중심(Sweet Spot)에 맞추는 감각'만큼은 항상 날카롭게 서 있다고 느낀다.",
+                "스트라이크 존을 아슬아슬하게 벗어나는 상대 투수의 결정구(유인구)에 배트가 나가는 것을 스스로 멈추는 경우가 많다.",
+                "투스트라이크 이후 카운트가 몰린 상황에서도, 당황하지 않고 배트 커버리지를 넓혀 어떻게든 공을 맞춰 인플레이 타구를 만들어낸다.",
+                "몸쪽 깊은 코스나 바깥쪽 보더라인에 걸치는 어려운 공이 들어와도 기습적으로 파울을 만들어내며 끈질기게 승부하곤 한다.",
+                "상대 투수가 존 안팎으로 던지는 변화구에 대해 내가 유도당해 '헛스윙(Whiff%)'을 하는 비율이 리그 평균보다 확실히 낮다고 판단한다.",
+                "스트라이크 존 안으로 들어오는 공(In-Zone)에 한해서는 배트를 내었을 때 맞추지 못하고 놓치는 경우가 거의 없다 (존 안 컨택율 90% 이상 예측).",
+                "시즌 전체 타석을 통틀어 내가 삼진(K%)을 당하고 돌아서는 빈도는 우리 리그 타자들 중 상위권(가장 적게 당하는 축)에 속할 것이다.",
+                "투수가 던지는 공의 실밥 회전이나 릴리스 포인트를 순간적으로 파악하여, 속구와 브레이킹 볼을 시각적으로 분리해 인지하는 능력이 매우 정교하다."
+            ]
+        },
+        {
+            category: "스피드 (Speed)",
+            desc: "순발력과 가속 감각에서 주루 상황 과감성, 도루 성공률 및 주루 효율성 데이터를 예측합니다.",
+            questions: [
+                "나는 타격 직후 홈플레이트에서 1루까지 전력 질주할 때, 리그 내 어떤 야수도 압박할 수 있는 폭발적인 가속도를 낼 수 있다는 자신감이 있다.",
+                "누상에 주자로 나갔을 때, 나의 주력(Running Speed) 자체만으로도 투수와 내야진에게 상당한 심리적 위압감을 주고 있다고 직관적으로 느낀다.",
+                "도루 스타트를 끊거나 기습적인 베이스 러닝을 시도할 때, 나의 첫 3보(가속 구간) 내에 최고 속도에 도달할 수 있는 신체 활성화 능력이 있다고 확신한다.",
+                "내야 땅볼 타구 때 상대 내야수가 공을 한 번 더듬거나 송구 실책을 유도하여 주력으로 세이프를 만들어내는 장면이 자주 나온다.",
+                "단독 도루 사인이나 그린 라이트(자율 도루 권한) 상황에서, 실패에 대한 두려움 없이 과감하게 스타트를 끊는 빈도가 높다.",
+                "외야 단타 시 1루에서 3루로, 혹은 외야 플라이 시 2루에서 3루로 태그업하여 진루하는 등 '한 베이스 더 가는 창의적인 주루'를 실전에서 자주 성공시킨다.",
+                "내 주력과 슬라이딩 능력을 고려했을 때, 시합에서 도루를 시도할 경우 최소 75~80% 이상의 높은 도루 성공률(SB%)을 유지할 수 있다고 판단한다.",
+                "상대 투수의 퀵모션을 머릿속으로 계산하여, 도루 타이밍을 정량적으로 빼앗는 능력이 뛰어나다.",
+                "나의 추가 진루 성공 횟수와 주루 플레이는 세이버메트릭스 주루 지표(예: RAA, 주루 점수) 기준으로 리그 평균치보다 확실히 플러스(+) 영역에 위치할 것이다.",
+                "베이스를 돌 때 원심력을 이겨내고 최단 거리를 돌면서도 속도 손실(감속)을 최소화하는 주루 라인 제어력이 정교하다."
+            ]
+        },
+        {
+            category: "수비 (Defense)",
+            desc: "타구 판단 감각과 포구 안정감, 실전 시프트 소화력, 수비 범위 및 스타트 지표를 수치화합니다.",
+            questions: [
+                "나는 내 포지션에서 요구되는 타구 판단력과 신체 순발력만큼은 리그 내 최고 수준이라는 강한 자신감이 있다.",
+                "상대 타자가 공을 때리는 순간, 배트와 공이 맞는 '타구음'만 듣고도 타구의 대략적인 깊이와 방향을 본능적으로 감각할 수 " + "있다.",
+                "내 쪽으로 아무리 강하고 까다로운 라인드라이브성 타구가 날아와도, 긴장하지 않고 완벽하게 포구해 낼 수 있다는 심리적 안정감이 늘 유지된다.",
+                "경기 중 내 머리 뒤로 넘어가는 어려운 타구나, 수비 경계선 근처의 까다로운 타구를 끝까지 쫓아가 안정적으로 포구하는 경우가 많다.",
+                "불규칙 바운드가 발생하거나, 구장의 조명탑·햇빛에 타구가 순간적으로 가려지는 악조건 속에서도 집중력을 잃지 않고 필딩을 성공시킨다.",
+                "감독·코칭스태프가 지시하는 데이터 기반의 수비 시프트 위치를 완벽히 이해하고, 시합 중 상황 변화에 맞춰 영리하게 수비 위치를 조정한다.",
+                "나의 좌우 및 앞뒤 수비 범위(Coverage)를 세이버메트릭스 지표(예: UZR 범위 점수)로 환산한다면 리그 평균보다 확실히 우위에 있을 것이다.",
+                "타격 임팩트 직후 내가 첫 발(First Step)을 떼는 반응 시간 및 스타트 효율이 리그 상위 20% 이내에 부합한다고 판단한다.",
+                "공을 글러브에 포구한 순간부터 다음 베이스로 송구하기 위해 공을 빼내는 '트랜지션(Transition) 시간'이 항상 일정하고 신속하게 제어된다.",
+                "시즌 전체 수비 기회 중 기술적 혹은 판단 미스로 인한 실책을 범할 확률(에러율)이 리그에서 가장 낮은 축에 속할 것이라 예측한다."
+            ]
+        },
+        {
+            category: "송구 (Throwing)",
+            desc: "직선 송구 자신감에서 실전 중계 및 보살 능력, 실제 투수 구속 변환 기준을 진단합니다.",
+            questions: [
+                "나는 깊은 수비 위치나 먼 거리에서 송구하더라도, 목표한 베이스까지 공을 직선(Line)으로 강하고 빠르게 뿌릴 수 있다는 자신감이 있다.",
+                "송구할 때 공에 걸리는 회전(Seam Rotation)과 끝이 좋아, 공이 날아가는 도중에 힘없이 가라앉거나 옆으로 심하게 휘지 않는다고 직관적으로 느낀다.",
+                "내 어깨의 맹렬한 강도 자체만으로도 루상의 주자가 추가 진루를 시도하려는 시도를 저지할 수 있다는 확신이 있다.",
+                "대시하면서 포구하는 러닝 스로우나 역동작 캐치 후 던지는 불완전한 신체 밸런스 속에서도, 송구를 정확하게 성공시키는 경우가 많다.",
+                "외야/내야 깊은 곳에서 홈이나 3루로 다이렉트 혹은 정확한 원바운드로 송구하여, 추가 진루를 시도하는 주자를 잡아내는 장면이 자주 나온다.",
+                "컷오프 맨(중계 플레이 야수)의 가슴 높이로 빠르고 정확하게 공을 연결하여, 팀 전체의 조직적인 디펜스를 매끄럽게 완성하곤 한다.",
+                "나는 현재 내/외야수 포지션을 소화하고 있지만, 당장 마운드(투수)에 올라가더라도 시속 140km/h 이상의 강속구를 던질 수 있는 능력이 있다.",
+                "시즌 전체 송구 기회 중, 악송구나 잡기 어려운 공을 던져 베이스 러너를 추가 진루시키는 '송구 실책(Throwing Error)'의 비율이 5% 미만일 것이라 예측한다.",
+                "공을 글러브에서 빼내어 탑 포지션을 만들고 릴리스하는 순간까지의 '테이크백 및 송구 동작 시간'이 리그에서 가장 신속한 축에 속한다.",
+                "지치거나 느슨해지지 않고, 시합의 매 순간 혹은 매 경기마다 기복 없이 한결같이 강하고 정교한 송구(퍼포먼스)를 보여줄 수 있다."
+            ]
+        }
+    ];
+
+    let currentStage = 0; 
+    let playerProfile = {}; 
+    const responses = surveyData.map(cat => new Array(cat.questions.length).fill(0));
+    let convertedScores = []; 
+    let animationProgress = 0;
+    let animationId = null;
+
+    function startSurvey() {
+        const name = document.getElementById("p-name").value;
+        const age = document.getElementById("p-age").value;
+        const height = document.getElementById("p-height").value;
+        const weight = document.getElementById("p-weight").value;
+        const league = document.getElementById("p-league").value;
+
+        if(!name || !age || !height || !weight || !league) {
+            alert("선수 성명을 포함한 모든 프로필 정보가 확보되어야 분석이 가동됩니다.");
+            return;
+        }
+
+        playerProfile = { name, age, height, weight, league };
+        document.getElementById("profile-stage").classList.add("hidden");
+        document.getElementById("survey-form").classList.remove("hidden");
+        renderStage();
+    }
+
+    function renderStage() {
+        const currentData = surveyData[currentStage];
+        document.getElementById("cat-title").innerText = currentData.category;
+        document.getElementById("cat-desc").innerText = currentData.desc;
+        
+        const progressPercent = ((currentStage + 1) / surveyData.length) * 100;
+        document.getElementById("progress").style.width = `${progressPercent}%`;
+
+        document.getElementById("btn-prev").innerText = currentStage === 0 ? "프로필 수정" : "이전 단계";
+        document.getElementById("btn-next").innerText = currentStage === surveyData.length - 1 ? "최종 리포트 뽑기" : "다음 단계";
+
+        const container = document.getElementById("questions-container");
+        container.innerHTML = "";
+
+        currentData.questions.forEach((qText, qIdx) => {
+            const qDiv = document.createElement("div");
+            qDiv.className = "question-item";
+            
+            const qTitle = document.createElement("div");
+            qTitle.className = "question-text";
+            qTitle.innerText = `${qIdx + 1}. ${qText}`;
+            qDiv.appendChild(qTitle);
+
+            const optionsGroup = document.createElement("div");
+            optionsGroup.className = "options-group";
+
+            const scoreLabels = ["전혀 아니다", "아니다", "보통이다", "그렇다", "매우 그렇다"];
+            for (let score = 1; score <= 5; score++) {
+                const label = document.createElement("label");
+                label.className = "option-label";
+                
+                if (responses[currentStage][qIdx] === score) label.classList.add("selected");
+
+                const radio = document.createElement("input");
+                radio.type = "radio";
+                radio.name = `q_${currentStage}_${qIdx}`;
+                radio.value = score;
+                if (responses[currentStage][qIdx] === score) radio.checked = true;
+
+                radio.onchange = function() { 
+                    responses[currentStage][qIdx] = score; 
+                    const siblings = optionsGroup.querySelectorAll('.option-label');
+                    siblings.forEach(el => el.classList.remove('selected'));
+                    label.classList.add('selected');
+                };
+
+                label.appendChild(radio);
+                label.appendChild(document.createTextNode(scoreLabels[score-1]));
+                optionsGroup.appendChild(label);
+            }
+            qDiv.appendChild(optionsGroup);
+            container.appendChild(qDiv);
+        });
+        window.scrollTo(0, 0);
+    }
+
+    function moveStage(step) {
+        if (step === -1 && currentStage === 0) {
+            document.getElementById("survey-form").classList.add("hidden");
+            document.getElementById("profile-stage").classList.remove("hidden");
+            document.getElementById("progress").style.width = "0%";
+            return;
+        }
+        if (step === 1) {
+            const unanswered = responses[currentStage].some(ans => ans === 0);
+            if (unanswered) {
+                alert("정확한 리포트 매칭을 위해 10개 문항에 모두 체크해 주세요.");
+                return;
+            }
+        }
+        currentStage += step;
+        if (currentStage >= surveyData.length) showResults();
+        else renderStage();
+    }
+
+    function showResults() {
+        document.getElementById("survey-form").classList.add("hidden");
+        document.getElementById("result-view").classList.remove("hidden");
+        document.getElementById("progress").style.width = "100%";
+
+        document.getElementById("profile-summary-text").innerHTML = `
+            <strong>[진단 완료 선수 인프라 스펙]</strong><br>
+            선수명: ${playerProfile.name} | 소속: ${playerProfile.league} | 연령: 만 ${playerProfile.age}세 | 신장: ${playerProfile.height}cm | 체중: ${playerProfile.weight}kg
+        `;
+
+        const tbody = document.getElementById("result-rows");
+        tbody.innerHTML = "";
+        convertedScores = []; 
+
+        surveyData.forEach((data, idx) => {
+            const sum = responses[idx].reduce((a, b) => a + b, 0);
+            const converted2080 = 20 + ((sum - 10) / 40) * 60; 
+            convertedScores.push(converted2080);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td style="font-weight:700; color:var(--primary-color);">${data.category.split(" ")[0]}</td>
+                <td style="color:#e2e8f0;">${sum} / 50 점</td>
+                <td style="color:var(--primary-color); font-weight:800; font-size:16px;">${converted2080.toFixed(1)}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        initRadarChart();
+        buildSolutionEngine(); 
+        
+        // 🚀 구글 클라우드 DB 연동 데이터 발송 작동
+        sendDataToFirebase(); 
+    }
+
+    // ========================================================
+    // ☁️ 구글 클라우드 Firestore 전송엔진
+    // ========================================================
+    function sendDataToFirebase() {
+        if (!window.dbStore) {
+            console.error("Firebase 서버 연동 모듈 오류");
+            return;
+        }
+        
+        const { db, collection, addDoc, serverTimestamp } = window.dbStore;
+
+        const recordData = {
+            playerName: playerProfile.name,
+            profile: {
+                age: Number(playerProfile.age),
+                height: Number(playerProfile.height),
+                weight: Number(playerProfile.weight),
+                league: playerProfile.league
+            },
+            scores: {
+                power: Number(convertedScores[0].toFixed(1)),
+                contact: Number(convertedScores[1].toFixed(1)),
+                speed: Number(convertedScores[2].toFixed(1)),
+                defense: Number(convertedScores[3].toFixed(1)),
+                throwing: Number(convertedScores[4].toFixed(1))
+            },
+            timestamp: serverTimestamp() 
+        };
+
+        // 데이터베이스 내부의 'scouting_reports' 폴더에 저장됩니다.
+        addDoc(collection(db, "scouting_reports"), recordData)
+            .then((docRef) => {
+                console.log("구글 DB 전송 완료 성공! ID: ", docRef.id);
+            })
+            .catch((error) => {
+                console.error("구글 클라우드 DB 통신 실 패: ", error);
+            });
+    }
+
+    function buildSolutionEngine() {
+        const reportContainer = document.getElementById("solution-report");
+        reportContainer.innerHTML = ""; 
+
+        const toolsCount = convertedScores.filter(score => score >= 55).length; 
+        const toolNames = ["POWER", "CONTACT", "SPEED", "DEFENSE", "THROWING"];
+        
+        let identityTitle = "";
+        let identityDesc = "";
+
+        if (toolsCount === 5) {
+            identityTitle = "👑 ALL-ROUND 5-TOOLS PLAYER (리그 지배자형)";
+            identityDesc = "모든 기술적 영역과 신체적 지표에서 약점이 없는 완벽한 육각형 스펙입니다. 현재 리그 평균을 상회하는 엘리트 툴(스케일 55 이상)을 갖추었습니다. 지금은 새로운 기술을 억지로 추가하기보다, 시즌 중 누적되는 신체 피로를 체계적으로 분산 관리하고 경기 중 평정심을 유지하여 기복 없는 상시성을 만드는 멘탈 루틴 및 세이버메트릭스 정량 데이터 제어에 전념할 때입니다.";
+        } else if (toolsCount >= 3) {
+            identityTitle = `⚔️ CORE ${toolsCount}-TOOLS PLAYER (핵심 주전형)`;
+            identityDesc = "실전 경기 결과를 스스로 바꿀 수 있는 확실한 다수의 무기를 장착했습니다. 본인의 확실한 강점 툴(스케일 55 이상)들을 극대화하여 팀 내 대체 불가능한 확실한 롤(예: 거포형 코너 야수 혹은 출루/작전 중심의 센터라인 야수)을 확실히 굳혀야 합니다. 단점을 고치느라 고유의 장점 메커니즘을 잃는 우를 범하지 마십시오.";
+        } else if (toolsCount === 1 || toolsCount === 2) {
+            const highTools = [];
+            convertedScores.forEach((s, idx) => { if(s >= 55) highTools.push(toolNames[idx]); });
+            identityTitle = `🎯 SPECIALIST (${highTools.join(" + ")} 스페셜리스트)`;
+            identityDesc = `팀에서 본인을 기용할 수밖에 없는 확실한 타깃 무기(${highTools.join(", ")})가 스케일 55 이상으로 선명한 상태입니다. 승패를 결정짓는 핵심 국면(결정적 한 방, 대주자 작전, 경기 후반 수비 강화 등)에서 이 툴을 백발백중으로 폭발시킬 수 있도록 훈련 집약도를 좁혀야 합니다. 부족한 툴들은 기술적 붕괴가 일어나지 않도록 리그 평균 수준(스케일 50)으로 방어선만 구축하십시오.`;
+        } else {
+            identityTitle = "📉 POTENTIAL PLAYER (성장 및 빌드업 타깃)";
+            identityDesc = "아직 본인만의 뚜렷한 색깔이 정립되지 않았거나, 전반적인 피지컬/메커니즘 밸런스가 정체된 상태입니다. 모든 요소를 동시에 올리려다가는 과부하가 걸립니다. 선수의 신체 조건과 직관적 감각이 가장 좋은 하나의 '앵커 툴(Anchor Tool)'을 명확히 지정하여 그것부터 리그 평균(스케일 50) 이상으로 뚫어내는 단기 돌파형 루틴이 시급합니다.";
+        }
+
+        let totalConfidence = 0;
+        let totalQuantitative = 0;
+        surveyData.forEach((cat, catIdx) => {
+            totalConfidence += responses[catIdx][0] + responses[catIdx][1] + responses[catIdx][2];
+            totalQuantitative += responses[catIdx][6] + responses[catIdx][7] + responses[catIdx][8] + responses[catIdx][9];
+        });
+        
+        const metaGap = (totalConfidence / 3) - (totalQuantitative / 4);
+        let metaTitle = "";
+        let metaDesc = "";
+
+        if (metaGap > 0.8) {
+            metaTitle = "🔥 주관적 확신 과잉형 (현실 데이터 동기화 필요)";
+            metaDesc = "멘탈 에너지와 열정은 훌륭하나, 본인이 느끼는 '느낌'과 실제 시합 데이터(타구 속도, 헛스윙률, 실제 출루율 등)의 냉정한 정량적 수치 사이에 괴리가 있습니다. 감각에만 의존하면 슬럼프 탈출구 조율이 늦어집니다. 비디오 분석 및 트랙맨/랩소도 데이터를 자주 확인하며 본인의 폼과 감각을 객관적인 지표와 일치시키는 작업이 필수적입니다.";
+        } else if (metaGap < -0.8) {
+            metaTitle = "🧠 소심한 실력자형 (오버싱킹 브레이크 해제 필요)";
+            metaDesc = "이미 충분한 신체 능력과 정량적 스펙을 낼 수 있는 조건을 갖추었음에도, 타석에서의 자기 의심과 오버싱킹(과도한 생각)이 신체 유연성을 마비시키고 있습니다. 기술 훈련량을 오히려 줄이고, '공 오면 친다' 수준으로 생각을 단순화하는 심리 앵커링 루틴이 동반되어야 본래의 실력이 실전에서 터져 나옵니다.";
+        } else {
+            metaTitle = "🎯 META PERFECT (이상적인 감각 동기화 상태)";
+            metaDesc = "자신이 생각하는 주관적 감각과 실제 몸이 만들어내고 있는 정량 지표의 예측 싱크로율이 정확히 일치합니다. 본인의 장단점을 명확하게 알고 제어하는 메타인지 고수입니다. 계획한 루틴대로 의심 없이 밀고 나가면 기복 없는 성장을 이뤄낼 수 있습니다.";
+        }
+
+        appendBlock(reportContainer, "badge-identity", identityTitle, identityDesc);
+        appendBlock(reportContainer, "badge-meta", metaTitle, metaDesc);
+
+        const toolTips = [
+            {
+                name: "POWER (파워)",
+                low: "⚠️ [피지컬 엔진 빌드업 시급] 스케일이 리그 평균치(50) 이하입니다. 순수 배트 스피드와 회전 토크가 부족한 상태이므로 무작정 스윙 궤적만 고치는 기술 훈련을 백날 해봐야 타구는 뻗지 않습니다. 지면 반발력을 회전력으로 치환할 수 있도록 하체 및 코어의 '절대 스트렝스(체계적 웨이트 트레이닝)'를 키워 엔진 배기량 자체를 높이는 것이 최우선 과제입니다.",
+                high: "스케일 55 이상의 우수한 타구 속도(Exit Velocity) 기반을 갖추었습니다. 오버스윙으로 인한 부상을 방지하고, 정타 확률을 결합하는 타이밍 최적화 훈련에 힘쓰세요."
+            },
+            {
+                name: "CONTACT (컨택)",
+                low: "스트라이크 존 커버리지가 무너져 평균 미만의 점수를 기록했습니다. 투수의 구종에 생각으로 대처하려 하지 말고, 본인의 핫존(Hot Zone)을 명확히 설정한 뒤 존 안에 들어오는 공에만 본능적으로 배트가 나가는 '나만의 존 설정 및 단순화 타격 루틴'이 필요합니다.",
+                high: "스케일 55 이상의 훌륭한 헛스윙률 제어력을 가지고 있습니다. 투스트라이크 이후에도 정교한 대처가 가능하므로, 카운트 싸움에서 주도권을 잡고 더 과감하게 배트를 돌려도 좋습니다."
+            },
+            {
+                name: "SPEED (스피드)",
+                low: "⚠️ [피지컬 엔진 빌드업 시급] 단거리 가속 지표가 리그 평균 이하에 정체되어 있습니다. 무작정 많이 뛰는 주루 연습은 효과가 없습니다. 첫 3보 구간에서 폭발적인 지면 압박과 탄성을 만들어낼 수 있도록 '순발력 및 플라이오메트릭(Plyometrics)' 중심의 체계적 트레이닝을 통해 하체 스프링 기능을 복원해야 합니다.",
+                high: "스케일 55 이상의 뛰어난 주력을 가졌습니다. 도루 성공률을 극대화하기 위해 상대 투수의 퀵모션 룸을 계산하고 스타트 타이밍을 뺏는 영리한 주루 전술을 결합하세요."
+            },
+            {
+                name: "DEFENSE (수비)",
+                low: "타구 임팩트 순간의 첫 발(First Step) 스타트와 타구음 판단 기복으로 평균 이하에 머물렀습니다. 시합 전 배트와 공의 마찰음에 따라 몸이 먼저 반응하도록 만드는 감각 깨우기 훈련과 포구 시 안정적인 골반 가동성 확보 훈련이 요구됩니다.",
+                high: "넓은 수비 범위를 증명하는 탁월한 필딩력(스케일 55 이상)을 지녔습니다. 팀 수비 시프트 지시 사항을 명확히 이해하고, 경기 상황 변화에 따라 창의적이고 영리하게 수비 위치를 주도하세요."
+            },
+            {
+                name: "THROWING (송구)",
+                low: "⚠️ [피지컬 엔진 빌드업 시급] 송구 끝의 힘(종속)이 죽는 등 스케일이 불안정한 상태입니다. 단순히 캐치볼만 많이 한다고 해결되지 않습니다. 러닝 스로우나 역동작 송구 시 신체 밸런스를 잡아줄 강력한 '회전 코어 홀딩(Core Holding) 및 어깨 후면 회전근개 강화 트레이닝'이 선행되어야 송구 메커니즘이 안정됩니다.",
+                high: "마운드 위 투수 못지않은 강력한 직선 송구력(스케일 55 이상)을 지녔습니다. 포구 후 공을 글러브에서 빼내는 트랜지션 타임을 최소화하여 주자의 진루 의지를 완벽히 억제하십시오."
+            }
+        ];
+
+        toolTips.forEach((tip, idx) => {
+            const score = convertedScores[idx];
+            const isHigh = score >= 55; 
+            const text = isHigh ? tip.high : tip.low;
+            const statusLabel = isHigh ? "🟢 優 (강점/최적화)" : "🔴 補 (피지컬/루틴 보완)";
+            
+            appendBlock(reportContainer, "badge-tool", `${tip.name} 독립 솔루션 [${statusLabel}]`, text);
+        });
+    }
+
+    function appendBlock(container, badgeClass, title, text) {
+        const block = document.createElement("div");
+        block.className = "solution-block";
+        block.innerHTML = `
+            <span class="sol-badge ${badgeClass}">${badgeClass.split("-")[1].toUpperCase()}</span>
+            <div class="sol-title">${title}</div>
+            <div class="sol-text">${text}</div>
+        `;
+        container.appendChild(block);
+    }
+
+    const labels = ["POWER", "CONTACT", "SPEED", "DEFENSE", "THROWING"];
+    let canvas, ctx;
+    const centerX = 180;
+    const centerY = 180;
+    const maxRadius = 120; 
+
+    function initRadarChart() {
+        canvas = document.getElementById("radarChart");
+        ctx = canvas.getContext("2d");
+        animateChart();
+        
+        document.getElementById("chart-container").addEventListener("mouseenter", animateChart);
+        document.getElementById("chart-container").addEventListener("touchstart", function(e) {
+            e.preventDefault();
+            animateChart();
+        });
+    }
+
+    function animateChart() {
+        if(animationId) cancelAnimationFrame(animationId);
+        animationProgress = 0;
+
+        function drawLoop() {
+            animationProgress += 0.05; 
+            if(animationProgress > 1) animationProgress = 1;
+
+            drawRadarBase(); 
+            drawDataPentagon(animationProgress); 
+
+            if(animationProgress < 1) animationId = requestAnimationFrame(drawLoop);
+        }
+        drawLoop();
+    }
+
+    function drawRadarBase() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const steps = [20, 40, 60, 80];
+        
+        steps.forEach((stepScore) => {
+            ctx.beginPath();
+            const currentRadius = ((stepScore - 20) / 60) * maxRadius;
+            const r = currentRadius < 5 ? 5 : currentRadius;
+
+            for (let i = 0; i < 5; i++) {
+                const angle = (Math.PI * 2 / 5) * i - (Math.PI / 2);
+                const x = centerX + r * Math.cos(angle);
+                const y = centerY + r * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.strokeStyle = "#334155";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = "#64748b";
+            ctx.font = "10px sans-serif";
+            ctx.fillText(stepScore, centerX + 5, centerY - r + 3);
+        });
+
+        for (let i = 0; i < 5; i++) {
+            const angle = (Math.PI * 2 / 5) * i - (Math.PI / 2);
+            const x = centerX + maxRadius * Math.cos(angle);
+            const y = centerY + maxRadius * Math.sin(angle);
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = "#1e293b";
+            ctx.stroke();
+
+            const labelX = centerX + (maxRadius + 28) * Math.cos(angle);
+            const labelY = centerY + (maxRadius + 15) * Math.sin(angle);
+            
+            ctx.fillStyle = "#38bdf8";
+            ctx.font = "bold 12px Pretendard";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(labels[i], labelX, labelY);
+        }
+    }
+
+    function drawDataPentagon(progress) {
+        ctx.save();
+        ctx.beginPath();
+
+        for (let i = 0; i < 5; i++) {
+            const score = convertedScores[i] || 20;
+            const clampedScore = score < 20 ? 20 : score;
+            const targetRadius = ((clampedScore - 20) / 60) * maxRadius;
+            const currentRadius = targetRadius * progress;
+
+            const angle = (Math.PI * 2 / 5) * i - (Math.PI / 2);
+            const x = centerX + currentRadius * Math.cos(angle);
+            const y = centerY + currentRadius * Math.sin(angle);
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+
+        ctx.closePath();
+        ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+        ctx.fill();
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "#0ea5e9";
+        ctx.stroke();
+        
+        for (let i = 0; i < 5; i++) {
+            const score = convertedScores[i] || 20;
+            const clampedScore = score < 20 ? 20 : score;
+            const currentRadius = (((clampedScore - 20) / 60) * maxRadius) * progress;
+            const angle = (Math.PI * 2 / 5) * i - (Math.PI / 2);
+            const x = centerX + currentRadius * Math.cos(angle);
+            const y = centerY + currentRadius * Math.sin(angle);
+
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.strokeStyle = "#0ea5e9";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+</script>
+</body>
+</html>
